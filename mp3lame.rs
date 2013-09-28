@@ -1,4 +1,5 @@
 use std::libc::{c_float, c_int, c_short, c_uchar, c_ulong, c_void};
+use std::vec;
 
 type GlobalFlags_ = *c_void;
 
@@ -91,6 +92,27 @@ impl LameContext {
   #[fixed_stack_segment]
   pub fn init_params(&self) {
     unsafe { lame_init_params(self.gfp) };
+  }
+  #[fixed_stack_segment]
+  pub fn encode_buffer_interleaved(&self, pcm: &[u8]) -> ~[u8] {
+    if pcm.len() % 4 != 0 {
+      return ~[];
+    }
+    let num_samples = pcm.len() / 4;
+    let mp3buf_size = (1.25 * num_samples as float + 7200.0) as uint;
+    unsafe {
+      let mut mp3buf: ~[u8] = vec::with_capacity(mp3buf_size);
+      let length = lame_encode_buffer_interleaved(self.gfp,
+                                    vec::raw::to_ptr(pcm) as *c_short,
+                                    num_samples as c_int,
+                                    vec::raw::to_mut_ptr(mp3buf) as *c_uchar,
+                                    mp3buf_size as c_int);
+      if length < 0 {
+        return ~[];
+      }
+      vec::raw::set_len(&mut mp3buf, length as uint);
+      mp3buf
+    }
   }
 }
 

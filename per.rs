@@ -43,12 +43,16 @@ fn main() {
   println(fmt!("Sample rate: %d Hz", speed));
   lame.set_quality(2);
   lame.set_bitrate(128);
+  lame.set_disable_reservoir(true);
+  lame.init_params();
   let (port, chan) = stream::<~[u8]>();
   do spawn_sched(SingleThreaded) {
     dsp.read_all(&chan);
   }
   loop {
     let buffer = port.recv();
-    println(fmt!("Read buffer of length %u", buffer.len()));
+    debug!("Read buffer of length %u", buffer.len());
+    let mp3buf = lame.encode_buffer_interleaved(buffer);
+    debug!("Encoded buffer of length %u", mp3buf.len());
   }
 }

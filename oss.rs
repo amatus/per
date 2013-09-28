@@ -1,4 +1,4 @@
-use std::libc::{c_int, c_void, close, O_RDONLY, open, read};
+use std::libc::{c_int, c_void, close, O_RDONLY, open, read, size_t};
 use std::rt::io::{io_error, IoError, OtherIoError};
 use std::vec;
 
@@ -120,7 +120,7 @@ impl OssDevice {
       unsafe {
         let length = read(self.fd,
                           vec::raw::to_mut_ptr(buffer) as *mut c_void,
-                          block_size as u32);
+                          block_size as size_t);
         if length == -1 {
           break;
         }

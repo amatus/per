@@ -3,16 +3,16 @@ use std::rt::io::io_error;
 use std::task::{SingleThreaded, spawn_sched};
 
 use oss::*;
-//use mp3lame::*;
+use mp3lame::*;
 mod oss;
-//mod mp3lame;
+mod mp3lame;
 
 static DSP_FILES: &'static [&'static str] = &["/dev/dsp", "/dev/dsp1"];
 static DSP_SPEEDS: [int, ..2] = [44100i, 48000i];
 
 #[fixed_stack_segment]
 fn main() {
-  //let ctx = LameContext::new();
+  let lame = LameContext::new();
   let mut foo = None;
   for file_name in DSP_FILES.iter() {
     match OssDevice::new(&Path(file_name.as_slice())) {
@@ -27,6 +27,7 @@ fn main() {
   dsp.reset();
   dsp.set_format();
   dsp.set_stereo();
+  lame.set_num_channels(2);
   let mut speed: int = 0;
   for dsp_speed in DSP_SPEEDS.iter() {
     do io_error::cond.trap(|_| {speed = 0}).inside {
@@ -37,7 +38,11 @@ fn main() {
       break;
     }
   }
+  lame.set_in_samplerate(speed);
+  lame.set_out_samplerate(speed);
   println(fmt!("Sample rate: %d Hz", speed));
+  lame.set_quality(2);
+  lame.set_bitrate(128);
   let (port, chan) = stream::<~[u8]>();
   do spawn_sched(SingleThreaded) {
     dsp.read_all(&chan);

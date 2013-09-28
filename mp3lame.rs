@@ -64,6 +64,34 @@ impl LameContext {
   pub fn new() -> LameContext {
     LameContext { gfp: unsafe { lame_init() }}
   }
+  #[fixed_stack_segment]
+  pub fn set_in_samplerate(&self, rate: int) {
+    unsafe { lame_set_in_samplerate(self.gfp, rate as c_int) };
+  }
+  #[fixed_stack_segment]
+  pub fn set_out_samplerate(&self, rate: int) {
+    unsafe { lame_set_out_samplerate(self.gfp, rate as c_int) };
+  }
+  #[fixed_stack_segment]
+  pub fn set_num_channels(&self, channels: int) {
+    unsafe { lame_set_num_channels(self.gfp, channels as c_int) };
+  }
+  #[fixed_stack_segment]
+  pub fn set_quality(&self, quality: int) {
+    unsafe { lame_set_quality(self.gfp, quality as c_int) };
+  }
+  #[fixed_stack_segment]
+  pub fn set_bitrate(&self, rate: int) {
+    unsafe { lame_set_brate(self.gfp, rate as c_int) };
+  }
+  #[fixed_stack_segment]
+  pub fn set_disable_reservoir(&self, disable: bool) {
+    unsafe { lame_set_disable_reservoir(self.gfp, disable as c_int) };
+  }
+  #[fixed_stack_segment]
+  pub fn init_params(&self) {
+    unsafe { lame_init_params(self.gfp) };
+  }
 }
 
 impl Drop for LameContext {

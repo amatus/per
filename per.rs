@@ -1,5 +1,6 @@
 extern mod extra;
 use extra::getopts::*;
+use extra::time::*;
 use std::os;
 use std::path::Path;
 use std::rt::io::io_error;
@@ -73,11 +74,26 @@ fn main() {
   lame.init_params();
   println(fmt!("Recording sample rate: %d Hz", speed));
   println(fmt!("Encoding sample rate:  %d Hz", lame.get_out_samplerate()));
+  let split = match matches.opt_str("s") {
+    Some(s) => from_str::<int>(s).unwrap() * 60,
+    None => 3600
+  };
+  let mut next_split = if matches.opt_present("a") {
+    let Timespec { sec, _ } = get_time();
+    Timespec::new(sec - sec % split as i64, 0)
+  } else {
+    get_time()
+  };
   let (port, chan) = stream::<~[u8]>();
   do spawn_sched(SingleThreaded) {
     dsp.read_all(&chan);
   }
   loop {
+    if next_split <= get_time() {
+      debug!("split!");
+      let Timespec { sec, nsec } = next_split;
+      next_split = Timespec::new(sec + split as i64, nsec);
+    }
     let buffer = port.recv();
     debug!("Read buffer of length %u", buffer.len());
     let mp3buf = lame.encode_buffer_interleaved(buffer);

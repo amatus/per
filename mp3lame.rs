@@ -74,6 +74,10 @@ impl LameContext {
     unsafe { lame_set_out_samplerate(self.gfp, rate as c_int) };
   }
   #[fixed_stack_segment]
+  pub fn get_out_samplerate(&self) -> int {
+    unsafe { lame_get_out_samplerate(self.gfp) as int }
+  }
+  #[fixed_stack_segment]
   pub fn set_num_channels(&self, channels: int) {
     unsafe { lame_set_num_channels(self.gfp, channels as c_int) };
   }

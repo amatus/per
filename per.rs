@@ -3,11 +3,12 @@ use extra::getopts::*;
 use extra::time::*;
 use std::os;
 use std::path::Path;
-use std::rt::io::io_error;
+use std::rt::io::{Create, io_error, Open, Write, Writer};
+use std::rt::io::file::open;
 use std::task::{SingleThreaded, spawn_sched};
 
-use oss::*;
-use mp3lame::*;
+use oss::OssDevice;
+use mp3lame::LameContext;
 mod oss;
 mod mp3lame;
 
@@ -59,7 +60,7 @@ fn main() {
   };
   let mut speed: int = 0;
   for dsp_speed in dsp_speeds.iter() {
-    do io_error::cond.trap(|_| {debug!("speed %d is a no go", *dsp_speed); speed = 0}).inside {
+    do io_error::cond.trap(|_| {speed = 0}).inside {
       dsp.set_speed(*dsp_speed);
       speed = *dsp_speed;
     }
@@ -84,13 +85,19 @@ fn main() {
   } else {
     get_time()
   };
+  let mut out_file = open(&Path("/dev/null"), Open, Write).unwrap();
   let (port, chan) = stream::<~[u8]>();
   do spawn_sched(SingleThreaded) {
     dsp.read_all(&chan);
   }
   loop {
-    if next_split <= get_time() {
+    let now = get_time();
+    if next_split <= now {
       debug!("split!");
+      out_file.write(lame.encode_flush_nogap());
+      out_file.flush();
+      out_file = open(&Path(at(now).rfc3339() + ".mp3"), Create, Write)
+        .unwrap();
       let Timespec { sec, nsec } = next_split;
       next_split = Timespec::new(sec + split as i64, nsec);
     }
@@ -98,5 +105,6 @@ fn main() {
     debug!("Read buffer of length %u", buffer.len());
     let mp3buf = lame.encode_buffer_interleaved(buffer);
     debug!("Encoded buffer of length %u", mp3buf.len());
+    out_file.write(mp3buf);
   }
 }

@@ -118,6 +118,20 @@ impl LameContext {
       mp3buf
     }
   }
+  #[fixed_stack_segment]
+  pub fn encode_flush_nogap(&self) -> ~[u8] {
+    unsafe {
+      let mut mp3buf: ~[u8] = vec::with_capacity(7200);
+      let length = lame_encode_flush_nogap(self.gfp,
+                                    vec::raw::to_mut_ptr(mp3buf) as *c_uchar,
+                                    7200);
+      if length < 0 {
+        return ~[];
+      }
+      vec::raw::set_len(&mut mp3buf, length as uint);
+      mp3buf
+    }
+  }
 }
 
 impl Drop for LameContext {

@@ -12,8 +12,6 @@ use mp3lame::LameContext;
 mod oss;
 mod mp3lame;
 
-
-#[fixed_stack_segment]
 fn main() {
   let args = os::args();
   let opts = ~[
@@ -26,6 +24,7 @@ fn main() {
   ];
   let DSP_FILES = ~[~"/dev/dsp", ~"/dev/dsp1"];
   let DSP_SPEEDS = ~[44100i, 48000i];
+  let FILE_FORMAT = "%F %H.%M.%S%z.mp3";
   let matches = match groups::getopts(args.tail(), opts) {
     Ok(m) => m,
     Err(f) => {
@@ -96,7 +95,7 @@ fn main() {
       debug!("split!");
       out_file.write(lame.encode_flush_nogap());
       out_file.flush();
-      out_file = open(&Path(at(now).rfc3339() + ".mp3"), Create, Write)
+      out_file = open(&Path(at(now).strftime(FILE_FORMAT)), Create, Write)
         .unwrap();
       let Timespec { sec, nsec } = next_split;
       next_split = Timespec::new(sec + split as i64, nsec);

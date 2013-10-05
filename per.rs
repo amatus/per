@@ -1,6 +1,7 @@
 extern mod extra;
 use extra::getopts::*;
 use extra::time::*;
+use std::io::{stdout, stderr};
 use std::os;
 use std::path::Path;
 use std::rt::io::{Create, io_error, Open, Write, Writer};
@@ -23,6 +24,7 @@ fn main() {
       "Align splits as if the first one happened midnight Jan. 1, 1970"),
     groups::optopt("b", "bitrate", "MP3 bitrate in kbps", "128"),
     groups::optopt("q", "quality", "MP3 quality", "2"),
+    groups::optflag("d", "dump", "Dumps raw samples to stdout"),
   ];
   let DSP_FILES = ~[~"/dev/dsp", ~"/dev/dsp1"];
   let DSP_SPEEDS = ~[44100i, 48000i];
@@ -82,8 +84,10 @@ fn main() {
   lame.set_bitrate(bitrate);
   lame.set_disable_reservoir(true);
   lame.init_params();
-  println(fmt!("Recording sample rate: %d Hz", speed));
-  println(fmt!("Encoding sample rate:  %d Hz", lame.get_out_samplerate()));
+  stderr().write_str(fmt!("Recording sample rate: %d Hz\n", speed));
+  stderr().write_str(fmt!("Encoding sample rate:  %d Hz\n",
+                          lame.get_out_samplerate()));
+  let dump = matches.opt_present("d");
   let split = match matches.opt_str("s") {
     Some(s) => from_str::<int>(s).unwrap() * 60,
     None => 3600
@@ -112,6 +116,9 @@ fn main() {
     }
     let buffer = port.recv();
     debug!("Read buffer of length %u", buffer.len());
+    if dump {
+      stdout().write(buffer);
+    }
     let mp3buf = lame.encode_buffer_interleaved(buffer);
     debug!("Encoded buffer of length %u", mp3buf.len());
     out_file.write(mp3buf);

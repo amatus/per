@@ -19,8 +19,8 @@ fn main() {
     groups::optmulti("r", "rate", "Sample rate in Hz", "44100"),
     groups::optopt("s", "split",
       "Number of minutes at which to split MP3 files", "60"),
-    groups::optflag("a",
-      "Align splits as if the first one happened midnight Jan. 1, 1970", ""),
+    groups::optflag("a", "align",
+      "Align splits as if the first one happened midnight Jan. 1, 1970"),
     groups::optopt("b", "bitrate", "MP3 bitrate in kbps", "128"),
     groups::optopt("q", "quality", "MP3 quality", "2"),
   ];
@@ -31,7 +31,7 @@ fn main() {
     Ok(m) => m,
     Err(f) => {
       println(f.to_err_msg());
-      print(groups::usage("Usage: per", opts));
+      print(groups::usage("Usage: per [options]", opts));
       return;
     }
   };

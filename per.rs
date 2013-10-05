@@ -20,7 +20,9 @@ fn main() {
     groups::optopt("s", "split",
       "Number of minutes at which to split MP3 files", "60"),
     groups::optflag("a",
-      "Align splits as if the first one happened midnight Jan. 1, 1970", "")
+      "Align splits as if the first one happened midnight Jan. 1, 1970", ""),
+    groups::optopt("b", "bitrate", "MP3 bitrate in kbps", "128"),
+    groups::optopt("q", "quality", "MP3 quality", "2"),
   ];
   let DSP_FILES = ~[~"/dev/dsp", ~"/dev/dsp1"];
   let DSP_SPEEDS = ~[44100i, 48000i];
@@ -67,9 +69,17 @@ fn main() {
       break;
     }
   }
+  let quality = match matches.opt_str("q") {
+    Some(q) => from_str::<int>(q).unwrap(),
+    None => 2
+  };
+  let bitrate = match matches.opt_str("b") {
+    Some(b) => from_str::<int>(b).unwrap(),
+    None => 128
+  };
   lame.set_in_samplerate(speed);
-  lame.set_quality(2);
-  lame.set_bitrate(128);
+  lame.set_quality(quality);
+  lame.set_bitrate(bitrate);
   lame.set_disable_reservoir(true);
   lame.init_params();
   println(fmt!("Recording sample rate: %d Hz", speed));

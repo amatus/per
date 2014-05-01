@@ -54,9 +54,6 @@ fn main() {
     None => fail!("Unable to open dsp device")
   };
   dsp.reset();
-  dsp.set_format();
-  dsp.set_stereo();
-  lame.set_num_channels(2);
   let dsp_speeds = match matches.opt_strs("r") {
     [] => DSP_SPEEDS,
     r => r.map(|x| { from_str::<int>(*x).unwrap() })
@@ -71,6 +68,9 @@ fn main() {
       break;
     }
   }
+  dsp.set_format();
+  dsp.set_stereo();
+  lame.set_num_channels(2);
   let quality = match matches.opt_str("q") {
     Some(q) => from_str::<int>(q).unwrap(),
     None => 2
